@@ -2,8 +2,12 @@ package server;
 
 import java.io.*;
 import java.net.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ServerConnection extends Thread {
+public class ServerConnection extends Thread implements Closeable {
+
+    private List<ServerConnection> serverList = new CopyOnWriteArrayList<>();
 
     private Socket socket;
     private BufferedReader in;
@@ -14,6 +18,7 @@ public class ServerConnection extends Thread {
         this.socket = socket;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        serverList.add(this);
         start();
     }
 
@@ -38,25 +43,27 @@ public class ServerConnection extends Thread {
 
     private void sendToAll(String msg) {
         Server.log(msg);
-        for (ServerConnection sc : Server.serverList) {
+        for (ServerConnection sc : Server.getServerList()) {
             try {
                 sc.out.write(msg + "\n");
                 sc.out.flush();
             } catch (IOException ignored) {
+                Server.log(msg);
             }
         }
     }
 
-    private void close() {
+    @Override
+    public void close() {
         Server.log("server closed");
         try {
             if (!socket.isClosed()) {
                 socket.close();
                 in.close();
                 out.close();
-                for (ServerConnection sc : Server.serverList) {
+                for (ServerConnection sc : Server.getServerList()) {
                     if (sc.equals(this)) sc.interrupt();
-                    Server.serverList.remove(this);
+                    Server.getServerList().remove(this);
                 }
             }
         } catch (IOException e) {

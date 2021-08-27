@@ -10,17 +10,21 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
 
-    public static ArrayList<ServerConnection> serverList = new ArrayList<>();
+    private static List<ServerConnection> serverList = new CopyOnWriteArrayList<>();
+
+    public static List<ServerConnection> getServerList() {
+        return serverList;
+    }
 
     public static void main(String[] args) throws IOException {
-        ServerSocket server = new ServerSocket(Props.getPort());
-        log("Server started");
-        System.out.println("Server started");
-        try {
+        try (ServerSocket server = new ServerSocket(Props.getPort());){
+            log("Server started");
+            System.out.println("Server started");
             while (true) {
                 Socket socket = server.accept();
                 System.out.println("Client accepted");
@@ -30,12 +34,10 @@ public class Server {
                 } catch (IOException e) {
                     log("Connection closed");
                     socket.close();
-
                 }
             }
         } finally {
             log("Connection closed");
-            server.close();
         }
     }
 
