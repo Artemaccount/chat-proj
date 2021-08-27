@@ -7,8 +7,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServerConnection extends Thread implements Closeable {
 
-    private List<ServerConnection> serverList = new CopyOnWriteArrayList<>();
-
     private Socket socket;
     private BufferedReader in;
     private BufferedWriter out;
